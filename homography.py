@@ -46,80 +46,21 @@ for i in range(len(images)):
 	image = images[i]
 	img = deepcopy(image)
 
-	# image = cv2.imread('data_1/data/0000000000.png')
-	# img = deepcopy(image)
-
-	#canny = cv2.Canny(gray, 50, 150)
-
-	cv2.circle(img, (190, 500), 5, (255, 0, 0), -1)
-	cv2.circle(img, (950, 500), 5, (255, 0, 0), -1)
-	cv2.circle(img, (530, 300), 5, (255, 0, 0), -1)
-	cv2.circle(img, (760, 300), 5, (255, 0, 0), -1)
+	# Visualize points
+	# cv2.circle(img, (150, 500), 5, (255, 0, 0), -1)
+	# cv2.circle(img, (950, 500), 5, (255, 0, 0), -1)
+	# cv2.circle(img, (530, 280), 5, (255, 0, 0), -1)
+	# cv2.circle(img, (740, 280), 5, (255, 0, 0), -1)
 
 	cv2.imshow("img_thresh", img)
 	if cv2.waitKey(0) & 0xff == 27:
 	    cv2.destroyAllWindows()
 
-
-	# src = np.float32([[450, 0], [450, 1100], [250, 0], [250, 1100]])
-	# dst = np.float32([[223, 569], [223, 711], [0, 0], [0, 1280]])
-	# H = cv2.getPerspectiveTransform(src, dst)
-
-	src = np.float32([[190, 500], [950, 500], [530, 300], [760, 300]])
+	src = np.float32([[150, 500], [950, 500], [530, 280], [740, 280]])
 	dst = np.float32([[0, 400], [200, 400], [0, 0] , [200, 0]])
 	Hom = cv2.getPerspectiveTransform(src, dst)
 
-	warped_brg = cv2.warpPerspective(img, Hom, (200,400))
-	# cv2.imshow("warped1", warped)
-	# cv2.waitKey(0) 
-
-	# img_thresh = combined_threshold(warped)
-	# cv2.imshow("img_thresh", img_thresh)
-	# if cv2.waitKey(0) & 0xff == 27:
-	#     cv2.destroyAllWindows()
-
-	# warped = cv2.GaussianBlur(warped, (1,1), 1.0)
-	warped = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
-	# warped = cv2.Canny(warped, 50, 150)
-	sobel_x = cv2.Sobel(warped,cv2.CV_64F,1,0,ksize=3)
-	sobel_y = cv2.Sobel(warped,cv2.CV_64F,0,1,ksize=3)
-
-	sobel_x = np.absolute(sobel_x)
-	sobel_x = np.uint8(255.0*sobel_x/np.max(sobel_x))
-	sobel_x = threshIt(sobel_x, 25, 180)
-
-	sobel_y = np.absolute(sobel_y)
-	sobel_y = np.uint8(255.0*sobel_y/np.max(sobel_y))
-	sobel_y = threshIt(sobel_y, 25, 150)
-
-	grad = np.sqrt(sobel_x**2 + sobel_y**2)
-
-	grad = ((255/np.max(grad)) * grad).astype(np.uint8) 
-
-	grad = threshIt(grad, 180, 255)
-
-	absgraddir = np.uint8(np.arctan2(np.absolute(sobel_y), np.absolute(sobel_x)))
-	absgraddir = threshIt(absgraddir, 1, np.pi/2)
-
-	combined = np.zeros_like(sobel_y) 
-	combined[((sobel_x == 1) & (sobel_y == 1)) | ((grad == 1) & (absgraddir == 1))] = 1
-
-	# cv2.imshow("sobel_x", 255*sobel_x)
-	# if cv2.waitKey(0) & 0xff == 27:
-	#     cv2.destroyAllWindows()
-	# cv2.imshow("sobel_y", 255*sobel_y)
-	# if cv2.waitKey(0) & 0xff == 27:
-	#     cv2.destroyAllWindows()
-	# cv2.imshow("grad", 255*grad)
-	# if cv2.waitKey(0) & 0xff == 27:
-	#     cv2.destroyAllWindows()
-	# cv2.imshow("absgraddir", 255*absgraddir)
-	# if cv2.waitKey(0) & 0xff == 27:
-	#     cv2.destroyAllWindows()
-	# cv2.imshow("combined", 255*combined)
-	# if cv2.waitKey(0) & 0xff == 27:
-	#     cv2.destroyAllWindows()
-
+	# HLS
 	hls = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
 	H = hls[:,:,0]
 	L = hls[:,:,1]
@@ -144,33 +85,21 @@ for i in range(len(images)):
 	G = img[:,:,1]
 	B = img[:,:,0]
 	RGB = np.zeros_like(R)
-	rbinary = threshIt(R, 170, 240)
+	rbinary = threshIt(R, 170, 255)
 	gbinary = threshIt(G, 200, 255)
 	bbinary = threshIt(B, 200, 255)
-
-	RGB[(rbinary == 1)  & (gbinary == 1) & (bbinary == 1)] = 1
-
-	# cv2.imshow("R", R)
+	# cv2.imshow("rbinary", 255*rbinary)
 	# if cv2.waitKey(0) & 0xff == 27:
 	#     cv2.destroyAllWindows()
-	# cv2.imshow("warped2", G)
+	# cv2.imshow("gbinary", 255*gbinary)
 	# if cv2.waitKey(0) & 0xff == 27:
 	#     cv2.destroyAllWindows()
-	# cv2.imshow("warped2", B)
+	# cv2.imshow("bbinary", 255*bbinary)
 	# if cv2.waitKey(0) & 0xff == 27:
 	#     cv2.destroyAllWindows()
-	cv2.imshow("rbinary", 255*rbinary)
-	if cv2.waitKey(0) & 0xff == 27:
-	    cv2.destroyAllWindows()
-	cv2.imshow("gbinary", 255*gbinary)
-	if cv2.waitKey(0) & 0xff == 27:
-	    cv2.destroyAllWindows()
-	cv2.imshow("bbinary", 255*bbinary)
-	if cv2.waitKey(0) & 0xff == 27:
-	    cv2.destroyAllWindows()
-	cv2.imshow("RGB", 255*RGB)
-	if cv2.waitKey(0) & 0xff == 27:
-	    cv2.destroyAllWindows()
+	# cv2.imshow("RGB", 255*RGB)
+	# if cv2.waitKey(0) & 0xff == 27:
+	#     cv2.destroyAllWindows()
 
 	# YUV colour
 	yuv = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
@@ -191,52 +120,27 @@ for i in range(len(images)):
 	if cv2.waitKey(0) & 0xff == 27:
 	    cv2.destroyAllWindows()
 
-	# combined1 = np.zeros_like(warped)
+	# combined1 = np.zeros_like(gray)
 	# combined1[(sobel_x == 1)  | (sbinary == 1) | (rbinary == 1)] = 1
 
-	# combined2 = np.zeros_like(warped)
+	# combined2 = np.zeros_like(gray)
 	# combined2[((sobel_x == 1) & (sobel_y == 1)) | (rbinary == 1)] = 1
 
-	# combined3 = np.zeros_like(warped)
+	# combined3 = np.zeros_like(gray)
 	# combined3[(sbinary ==1) | (ubinary ==1)| (rbinary == 1 )] = 1
 
-	# combined4 = np.zeros_like(warped)
+	# combined4 = np.zeros_like(gray)
 	# combined4[(sobel_x == 1)  | (sbinary == 1) | (rbinary == 1 ) ] = 1
 
-	combined5 = np.zeros_like(warped)
-	combined5[(sobel_x == 1)  & (ubinary ==1)] = 1
-	# combined5[((sobel_x == 1) | (rbinary == 1)) & ( (sbinary ==1) | (ubinary ==1)| (rbinary == 1 ))] = 1
+	combined5 = np.zeros_like(img[:,:,0])
+	combined5[(rbinary == 1)  & (gbinary == 1) & (bbinary == 1)] = 1
 
-	# cv2.imshow("combined1", 255*combined1)
-	# if cv2.waitKey(0) & 0xff == 27:
-	#     cv2.destroyAllWindows()
-	# cv2.imshow("combined1", 255*combined2)
-	# if cv2.waitKey(0) & 0xff == 27:
-	#     cv2.destroyAllWindows()
-	# cv2.imshow("combined1", 255*combined3)
-	# if cv2.waitKey(0) & 0xff == 27:
-	#     cv2.destroyAllWindows()
 	cv2.imshow("combined1", 255*combined5)
 	if cv2.waitKey(0) & 0xff == 27:
 	    cv2.destroyAllWindows()
 
+	combined5 = cv2.warpPerspective(combined5, Hom, (200,400))
 
-
-
-	# combined1 = cv2.warpPerspective(combined1, Hom, (200,500))
-	# combined2 = cv2.warpPerspective(combined2, Hom, (200,500))
-	# combined3 = cv2.warpPerspective(combined3, Hom, (200,500))
-	combined5 = cv2.warpPerspective(combined5, Hom, (200,500))
-
-	# cv2.imshow("combined1-tran", 255*combined1)
-	# if cv2.waitKey(0) & 0xff == 27:
-	#     cv2.destroyAllWindows()
-	# cv2.imshow("combined1-tran", 255*combined2)
-	# if cv2.waitKey(0) & 0xff == 27:
-	#     cv2.destroyAllWindows()
-	# cv2.imshow("combined1-tran", 255*combined3)
-	# if cv2.waitKey(0) & 0xff == 27:
-	    # cv2.destroyAllWindows()
 	cv2.imshow("combined1-tran", 255*combined5)
 	if cv2.waitKey(0) & 0xff == 27:
 	    cv2.destroyAllWindows()
