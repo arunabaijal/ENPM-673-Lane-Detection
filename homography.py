@@ -20,7 +20,7 @@ image_dir = os.path.join(current_dir, "data_1/data")
 images = []
 image_names = []
 
-# sorted(os.listdir(whatever_directory))
+select_data = 1
 
 K = np.asarray([[9.037596e+02, 0.000000e+00, 6.957519e+02],
                 [0.000000e+00, 9.019653e+02, 2.242509e+02],
@@ -28,34 +28,49 @@ K = np.asarray([[9.037596e+02, 0.000000e+00, 6.957519e+02],
 
 D = np.asarray([-3.639558e-01, 1.788651e-01, 6.029694e-04, -3.922424e-04, -5.382460e-02])
 
-# cap = cv2.VideoCapture('data_2/challenge_video.mp4')
-# if (cap.isOpened() == False):
-#     print("Unable to read camera feed")
-# # out = cv2.VideoWriter('tag1CubeResult.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15, (frame_width, frame_height))
-# while (True):
-#     ret, im = cap.read()
-#     if ret == True:
-#         im = cv2.undistort(im, K, D) 
-#         im = cv2.GaussianBlur(im, (5,5), 20.0)
-#         img_yuv = cv2.cvtColor(im, cv2.COLOR_BGR2YUV)
-#         img_yuv[:,:,0] = cv2.equalizeHist(img_yuv[:,:,0])
-#         im = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
-#         images.append(im)
-#     else:
-#         cap.release()
-#         break
+if select_data == 0:
+	cap = cv2.VideoCapture('data_2/challenge_video.mp4')
+	if (cap.isOpened() == False):
+	    print("Unable to read camera feed")
+	# out = cv2.VideoWriter('tag1CubeResult.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15, (frame_width, frame_height))
+	while (True):
+	    ret, im = cap.read()
+	    if ret == True:
+	        im = cv2.undistort(im, K, D) 
+	        img_yuv = cv2.cvtColor(im, cv2.COLOR_BGR2YUV)
+	        img_yuv[:,:,0] = cv2.equalizeHist(img_yuv[:,:,0])
+	        im = cv2.cvtColor(img_yuv, cv2.COLOR_YUV2BGR)
+	        im = cv2.GaussianBlur(im, (5,5), 5)
+	        images.append(im)
+	    else:
+	        cap.release()
+	        break
 
+	src1 = np.array([[(280, 700), (1100, 700), (760, 480), (600, 480)]])
 
-for name in sorted(os.listdir(image_dir)):
-    # print(name)
-    im = cv2.imread(os.path.join(image_dir, name))
-    im = cv2.undistort(im, K, D) 
-    im = cv2.GaussianBlur(im, (5,5), 20.0)
-    if im is not None:
-        images.append(im)
-        image_names.append(name)
-    else:
-        print("None")
+	mask = np.zeros_like(images[0])
+	cv2.fillPoly(mask, src1, (255,255,255)) 
+	mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+	mask = threshIt(mask, 200, 255)
+
+else:
+	for name in sorted(os.listdir(image_dir)):
+	    # print(name)
+	    im = cv2.imread(os.path.join(image_dir, name))
+	    im = cv2.undistort(im, K, D) 
+	    im = cv2.GaussianBlur(im, (5,5), 20.0)
+	    if im is not None:
+	        images.append(im)
+	        image_names.append(name)
+	    else:
+	        print("None")
+
+	src1 = np.array([[(150, 500), (950, 500), (740, 280), (530, 280)]])
+
+	mask = np.zeros_like(images[0])
+	cv2.fillPoly(mask, src1, (255,255,255)) 
+	mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
+	mask = threshIt(mask, 200, 255)
 
 print(len(images))
 
@@ -65,18 +80,20 @@ for i in range(len(images)):
     img = deepcopy(image)
 
     # Visualize points
-    # cv2.circle(img, (150, 500), 5, (255, 0, 0), -1)
-    # cv2.circle(img, (950, 500), 5, (255, 0, 0), -1)
-    # cv2.circle(img, (530, 280), 5, (255, 0, 0), -1)
-    # cv2.circle(img, (740, 280), 5, (255, 0, 0), -1)
+    # cv2.circle(img, (280, 700), 5, (255, 0, 0), -1)
+    # cv2.circle(img, (1100, 700), 5, (255, 0, 0), -1)
+    # cv2.circle(img, (760, 480), 5, (255, 0, 0), -1)
+    # cv2.circle(img, (600, 480), 5, (255, 0, 0), -1)
 
-    cv2.imshow("img_thresh", img)
-    if cv2.waitKey(0) & 0xff == 27:
-        cv2.destroyAllWindows()
+    # plt.imshow(img)
+    # plt.show()
+    # cv2.imshow("image", img)
+    # if cv2.waitKey(0) & 0xff == 27:
+    #     cv2.destroyAllWindows()
 
-    src = np.float32([[150, 500], [950, 500], [530, 280], [740, 280]])
-    dst = np.float32([[0, 400], [200, 400], [0, 0] , [200, 0]])
-    Hom = cv2.getPerspectiveTransform(src, dst)
+    # src = np.float32([[150, 500], [950, 500], [530, 280], [740, 280]])
+    # dst = np.float32([[0, 400], [200, 400], [0, 0] , [200, 0]])
+    # Hom = cv2.getPerspectiveTransform(src, dst)
 
     # HLS
     hls = cv2.cvtColor(img, cv2.COLOR_BGR2HLS)
@@ -86,30 +103,30 @@ for i in range(len(images)):
 
     hbinary = threshIt(H, 10, 70)
     lbinary = threshIt(L, 120, 200)
-    sbinary = threshIt(S, 80, 255)
-    # cv2.imshow("sbinary", 255 * hbinary)
+    sbinary = threshIt(S, 120, 255)
+    # cv2.imshow("H", 255 * hbinary)
     # if cv2.waitKey(0) & 0xff == 27:
     #     cv2.destroyAllWindows()
-    # cv2.imshow("sbinary", 255 * sbinary)
+    # cv2.imshow("L", 255 * sbinary)
     # if cv2.waitKey(0) & 0xff == 27:
     #     cv2.destroyAllWindows()
-    # cv2.imshow("sbinary", 255 * lbinary)
+    # cv2.imshow("S", 255 * lbinary)
     # if cv2.waitKey(0) & 0xff == 27:
     #     cv2.destroyAllWindows()
 
     yellow = np.zeros_like(img[:,:,0])
     yellow[(hbinary == 1) & (lbinary == 1) & (sbinary == 1)] = 1
 
-    cv2.imshow("sbinary", 255 * yellow)
-    if cv2.waitKey(0) & 0xff == 27:
-        cv2.destroyAllWindows()
+    # cv2.imshow("yellow", 255 * yellow)
+    # if cv2.waitKey(0) & 0xff == 27:
+    #     cv2.destroyAllWindows()
 
     # RGB colour
     R = img[:,:,2]
     G = img[:,:,1]
     B = img[:,:,0]
     RGB = np.zeros_like(R)
-    rbinary = threshIt(R, 170, 255)
+    rbinary = threshIt(R, 200, 255)
     gbinary = threshIt(G, 200, 255)
     bbinary = threshIt(B, 200, 255)
 
@@ -129,21 +146,30 @@ for i in range(len(images)):
     #     cv2.destroyAllWindows()
 
     # YUV colour
-    # yuv = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
-    # Y = yuv[:,:,0]
-    # U = yuv[:,:,1]
-    # V = yuv[:,:,2]
-    # ubinary = threshIt(Y, 180, 255)
-    # cv2.imshow("U", U)
+    yuv = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
+    Y = yuv[:,:,0]
+    U = yuv[:,:,1]
+    V = yuv[:,:,2]
+    ybinary = threshIt(Y, 180, 255)
+    ubinary = threshIt(U, 0, 120)
+    vbinary = threshIt(V, 70, 200)
+    # cv2.imshow("Y", Y)
     # if cv2.waitKey(0) & 0xff == 27:
     #     cv2.destroyAllWindows()
-    # cv2.imshow("Y", Y)
+    # cv2.imshow("U", U)
     # if cv2.waitKey(0) & 0xff == 27:
     #     cv2.destroyAllWindows()
     # cv2.imshow("V", V)
     # if cv2.waitKey(0) & 0xff == 27:
     #     cv2.destroyAllWindows()
-    # cv2.imshow("ubinary", 255*ubinary)
+
+    # cv2.imshow("Y", 255*ybinary)
+    # if cv2.waitKey(0) & 0xff == 27:
+    #     cv2.destroyAllWindows()
+    # cv2.imshow("U", 255*ubinary)
+    # if cv2.waitKey(0) & 0xff == 27:
+    #     cv2.destroyAllWindows()
+    # cv2.imshow("V", 255*vbinary)
     # if cv2.waitKey(0) & 0xff == 27:
     #     cv2.destroyAllWindows()
 
@@ -160,16 +186,19 @@ for i in range(len(images)):
     # combined4[(sobel_x == 1)  | (sbinary == 1) | (rbinary == 1 ) ] = 1
 
     combined5 = np.zeros_like(img[:,:,0])
-    combined5[(white == 1) | (yellow == 1)] = 1
+    if select_data == 0:
+    	combined5[((white == 1) | ((yellow == 1) | (ubinary == 1))) & (mask == 1)] = 1
+    else:
+    	combined5[((white == 1) | (yellow == 1)) & (mask == 1)] = 1
 
     cv2.imshow("combined1", 255*combined5)
     if cv2.waitKey(0) & 0xff == 27:
         cv2.destroyAllWindows()
 
-    combined5 = cv2.warpPerspective(combined5, Hom, (200,400))
+    # combined5 = cv2.warpPerspective(combined5, Hom, (200,400))
 
-    cv2.imshow("combined1-tran", 255*combined5)
-    if cv2.waitKey(0) & 0xff == 27:
-        cv2.destroyAllWindows()
+    # cv2.imshow("combined1-tran", 255*combined5)
+    # if cv2.waitKey(0) & 0xff == 27:
+    #     cv2.destroyAllWindows()
 
 
