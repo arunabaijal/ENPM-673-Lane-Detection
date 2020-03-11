@@ -41,6 +41,8 @@ def increase_contrast_and_brightness():
         cv2.waitKey(1)
         new_image = cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
         out_contrast.write(new_image)
+    out.release()
+    out_contrast.release()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Check if need to convert video to images.')

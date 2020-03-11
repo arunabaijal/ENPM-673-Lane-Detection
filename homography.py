@@ -21,7 +21,7 @@ image_dir = os.path.join(current_dir, "data_1/data")
 images = []
 image_names = []
 
-select_data = 0
+select_data = 1
 
 K = np.asarray([[9.037596e+02, 0.000000e+00, 6.957519e+02],
                 [0.000000e+00, 9.019653e+02, 2.242509e+02],
@@ -32,6 +32,8 @@ D = np.asarray([-3.639558e-01, 1.788651e-01, 6.029694e-04, -3.922424e-04, -5.382
 width = 0
 height = 0
 midval = 0
+threshleft = 0
+threshright = 0
 
 if select_data == 0:
     cap = cv2.VideoCapture('data_2/challenge_video.mp4')
@@ -62,6 +64,8 @@ if select_data == 0:
     width = images[0].shape[1]
     height = images[0].shape[0]
     midval = 500
+    threshleft = 150
+    threshright = 70
 
 else:
     for name in sorted(os.listdir(image_dir)):
@@ -86,6 +90,8 @@ else:
     width = images[0].shape[1]
     height = images[0].shape[0]
     midval = 270
+    threshleft = 120
+    threshright = 120
 
 print(len(images))
 
@@ -146,7 +152,7 @@ for i in range(len(images)):
     combined5 = np.float32(combined5 * 255)
     sobelx = cv2.Sobel(combined5, cv2.CV_64F, 1, 0, ksize=5)
     # cv2.waitKey(1)
-    lines = cv2.HoughLines(np.uint8(sobelx), 1, np.pi / 100, 120)
+    lines = cv2.HoughLines(np.uint8(sobelx), 1, np.pi / 100, threshleft)
     sobelx = np.float32(sobelx)
     cdst = cv2.cvtColor(sobelx, cv2.COLOR_GRAY2BGR)
     xPositionsLeft = []
@@ -160,16 +166,50 @@ for i in range(len(images)):
             theta = lines[j][0][1]
             a = math.cos(theta)
             b = math.sin(theta)
-            x = int(-(height-1)*b/a + rho/a)
+            x1 = int(-(height - 1) * b / a + rho / a)
+            x2 = int(-midval * b / a + rho / a)
             # cv2.line(cdst, pt1, pt2, (0, 0, 255), 3, cv2.LINE_AA)
-            if 0 <= x < width:
-                xPositionsLeft.append(x)
+            if 0 <= x1 < width:
+                xPositionsLeft.append([x1,x2])
                 params.append([rho, theta])
         # Find the left most line
-        xleft = [xminval for xminval in xPositionsLeft if xminval < 700]
-        xright = [xminval for xminval in xPositionsLeft if xminval > 700]
+        xleft = [[xminval, xmaxval] for xminval, xmaxval in xPositionsLeft if xminval < 650 and xmaxval < 650]
+        # xright = [[xminval, xmaxval] for xminval, xmaxval in xPositionsLeft if xminval > 700 and xmaxval > 700]
         # print(len(xleft))
-        indexes = [xleft, xright]
+        indexes = [xleft]
+        for item in indexes:
+            leftMost = int((len(item) / 2) + 0.5) - 1
+            if leftMost >= 0:
+                leftMost = xPositionsLeft.index(item[leftMost])
+                rho = params[leftMost][0]
+                theta = params[leftMost][1]
+                a = math.cos(theta)
+                b = math.sin(theta)
+                x1 = int(-(height-1) * b / a + rho / a)
+                x2 = int(-midval * b / a + rho / a)
+                pt1 = (x1, height-1)
+                pt2 = (x2, midval)
+                cv2.line(img, pt1, pt2, (0, 0, 255), 3, cv2.LINE_AA)
+                points.append(pt1)
+                points.append(pt2)
+    lines = cv2.HoughLines(np.uint8(sobelx), 1, np.pi / 100, threshright)
+    if lines is not None:
+        for j in range(0, len(lines)):
+            rho = lines[j][0][0]
+            theta = lines[j][0][1]
+            a = math.cos(theta)
+            b = math.sin(theta)
+            x1 = int(-(height - 1) * b / a + rho / a)
+            x2 = int(-midval * b / a + rho / a)
+            # cv2.line(cdst, pt1, pt2, (0, 0, 255), 3, cv2.LINE_AA)
+            if 0 <= x1 < width:
+                xPositionsLeft.append([x1,x2])
+                params.append([rho, theta])
+        # Find the left most line
+        # xleft = [[xminval, xmaxval] for xminval, xmaxval in xPositionsLeft if xminval < 700 and xmaxval < 700]
+        xright = [[xminval, xmaxval] for xminval, xmaxval in xPositionsLeft if xminval > 650 and xmaxval > 650]
+        # print(len(xleft))
+        indexes = [xright]
         for item in indexes:
             leftMost = int((len(item) / 2) + 0.5) - 1
             if leftMost >= 0:
@@ -199,6 +239,6 @@ for i in range(len(images)):
         img = cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0)
     cv2.imshow('final', img)
     cv2.waitKey(1)
-#     out.write(img)
-# out.release()
+    out.write(img)
+out.release()
 
