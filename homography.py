@@ -201,10 +201,12 @@ for i in range(len(images)):
     # cv2.imshow("combined1-tran", 255*combined5)
     # if cv2.waitKey(0) & 0xff == 27:
     #     cv2.destroyAllWindows()
-
-    final_points = []
+    # combined6 = np.zeros_like(img[:, :, 0])
+    # combined6[(mask == 0)] = 0
     combined5 = np.float32(combined5 * 255)
     sobelx = cv2.Sobel(combined5, cv2.CV_64F, 1, 0, ksize=5)
+    # combined6 = np.float32(combined6 * 255)
+    # sobelxleft = cv2.Sobel(combined6, cv2.CV_64F, 1, 0, ksize=5)
     # dst = cv2.Canny(np.uint8(sobelx), 50, 200, None, 3)
     # cv2.imshow('edges', dst)
     # cv2.waitKey(1)
@@ -212,21 +214,20 @@ for i in range(len(images)):
     sobelx = np.float32(sobelx)
     cdst = cv2.cvtColor(sobelx, cv2.COLOR_GRAY2BGR)
     xPositionsLeft = []
+    # print('Left lines', len(lines))
     if lines is not None:
         for j in range(0, len(lines)):
             rho = lines[j][0][0]
             theta = lines[j][0][1]
             a = math.cos(theta)
             b = math.sin(theta)
-            x0 = a * rho
-            y0 = b * rho
-            pt1 = (int(x0 + 1000 * (-b)), int(y0 + 1000 * (a)))
-            pt2 = (int(x0 - 1000 * (-b)), int(y0 - 1000 * (a)))
+            x = int(-511*b/a + rho/a)
             # cv2.line(cdst, pt1, pt2, (0, 0, 255), 3, cv2.LINE_AA)
-            xPositionsLeft.append((pt1[0] + pt2[0]) / 2)
+            xPositionsLeft.append(x)
     if lines is not None:
         # Find the left most line
-        xleft = [xminval for xminval in xPositionsLeft if xminval < 80]
+        print('Left',xPositionsLeft)
+        xleft = [xminval for xminval in xPositionsLeft if xminval < 700]
         # print(len(xleft))
         leftMost = int((len(xleft) / 2) + 0.5) - 1
         if leftMost >= 0:
@@ -239,9 +240,8 @@ for i in range(len(images)):
             y0 = b * rho
             pt1 = (int(x0 + 1000 * (-b)), int(y0 + 1000 * (a)))
             pt2 = (int(x0 - 1000 * (-b)), int(y0 - 1000 * (a)))
-            cv2.line(cdst, pt1, pt2, (0, 0, 255), 3, cv2.LINE_AA)
-            final_points.append([pt1, pt2])
-    lines = cv2.HoughLines(np.uint8(sobelx), 1, np.pi / 100, 180)
+            cv2.line(img, pt1, pt2, (0, 0, 255), 3, cv2.LINE_AA)
+    lines = cv2.HoughLines(np.uint8(sobelx), 1, np.pi / 100, 150)
     xPositionsRight = []
     if lines is not None:
         for j in range(0, len(lines)):
@@ -249,17 +249,13 @@ for i in range(len(images)):
             theta = lines[j][0][1]
             a = math.cos(theta)
             b = math.sin(theta)
-            x0 = a * rho
-            y0 = b * rho
-            pt1 = (int(x0 + 1000 * (-b)), int(y0 + 1000 * (a)))
-            pt2 = (int(x0 - 1000 * (-b)), int(y0 - 1000 * (a)))
-            # cv2.line(cdst, pt1, pt2, (0, 0, 255), 3, cv2.LINE_AA)
-            xPositionsRight.append((pt1[0] + pt2[0]) / 2)
-
+            x = int(-511*b/a + rho/a)
+            xPositionsRight.append(x)
+    #
     if lines is not None:
         # Find the left most line
         # leftMost = xPositionsLeft.index(min(xPositionsLeft))
-        xright = [x for x in xPositionsRight if x > 100]
+        xright = [x for x in xPositionsRight if x > 700]
         rightMost = int((len(xright) / 2) + 0.5) - 1
         if rightMost >= 0:
             rightMost = xPositionsRight.index(xright[rightMost])
@@ -273,10 +269,9 @@ for i in range(len(images)):
             y0 = b * rho
             pt1 = (int(x0 + 1000 * (-b)), int(y0 + 1000 * (a)))
             pt2 = (int(x0 - 1000 * (-b)), int(y0 - 1000 * (a)))
-            cv2.line(cdst, pt1, pt2, (0, 0, 255), 3, cv2.LINE_AA)
-            final_points.append([pt1, pt2])
-    # cv2.line(cdst, (80,0), (80,200), (0, 255, 0), 3, cv2.LINE_AA)
-    cv2.imshow('final', cdst)
+            cv2.line(img, pt1, pt2, (0, 0, 255), 3, cv2.LINE_AA)
+    cv2.line(cdst, (700,512), (700,200), (0, 255, 0), 3, cv2.LINE_AA)
+    cv2.imshow('final', img)
     cv2.waitKey(1)
 
     # hom_inverse = np.linalg.inv(Hom)
