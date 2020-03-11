@@ -19,9 +19,6 @@ def increase_contrast_and_brightness():
     frame_width = img.shape[1]
     frame_height = img.shape[0]
     out = cv2.VideoWriter('resultHistogramEqualization.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15, (frame_width, frame_height))
-    out_contrast = cv2.VideoWriter('resultContrastBrightness.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15, (frame_width, frame_height))
-    alpha = 2
-    beta = 50
     # image = cv2.imread('frame0.jpg')
     for i in range(619):
         image = cv2.imread('frame' + str(i) + '.jpg')
@@ -39,10 +36,7 @@ def increase_contrast_and_brightness():
         out.write(new_image)
         cv2.imshow('histogram', new_image)
         cv2.waitKey(1)
-        new_image = cv2.convertScaleAbs(image, alpha=alpha, beta=beta)
-        out_contrast.write(new_image)
     out.release()
-    out_contrast.release()
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description='Check if need to convert video to images.')
