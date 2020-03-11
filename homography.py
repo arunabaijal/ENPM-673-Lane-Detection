@@ -21,13 +21,17 @@ image_dir = os.path.join(current_dir, "data_1/data")
 images = []
 image_names = []
 
-select_data = 1
+select_data = 0
 
 K = np.asarray([[9.037596e+02, 0.000000e+00, 6.957519e+02],
                 [0.000000e+00, 9.019653e+02, 2.242509e+02],
                 [0.000000e+00, 0.000000e+00, 1.000000e+00]])
 
 D = np.asarray([-3.639558e-01, 1.788651e-01, 6.029694e-04, -3.922424e-04, -5.382460e-02])
+
+width = 0
+height = 0
+midval = 0
 
 if select_data == 0:
     cap = cv2.VideoCapture('data_2/challenge_video.mp4')
@@ -53,6 +57,11 @@ if select_data == 0:
     cv2.fillPoly(mask, src1, (255,255,255))
     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
     mask = threshIt(mask, 200, 255)
+    out = cv2.VideoWriter('PolyOverlayData2.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15,
+                          (images[0].shape[1], images[0].shape[0]))
+    width = images[0].shape[1]
+    height = images[0].shape[0]
+    midval = 500
 
 else:
     for name in sorted(os.listdir(image_dir)):
@@ -72,6 +81,11 @@ else:
     cv2.fillPoly(mask, src1, (255,255,255))
     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
     mask = threshIt(mask, 200, 255)
+    out = cv2.VideoWriter('PolyOverlayData1.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15,
+                          (images[0].shape[1], images[0].shape[0]))
+    width = images[0].shape[1]
+    height = images[0].shape[0]
+    midval = 270
 
 print(len(images))
 
@@ -136,6 +150,7 @@ for i in range(len(images)):
     sobelx = np.float32(sobelx)
     cdst = cv2.cvtColor(sobelx, cv2.COLOR_GRAY2BGR)
     xPositionsLeft = []
+    params = []
     # print('Left lines', len(lines))
     points = []
     overlay = img.copy()
@@ -145,9 +160,11 @@ for i in range(len(images)):
             theta = lines[j][0][1]
             a = math.cos(theta)
             b = math.sin(theta)
-            x = int(-511*b/a + rho/a)
+            x = int(-(height-1)*b/a + rho/a)
             # cv2.line(cdst, pt1, pt2, (0, 0, 255), 3, cv2.LINE_AA)
-            xPositionsLeft.append(x)
+            if 0 <= x < width:
+                xPositionsLeft.append(x)
+                params.append([rho, theta])
         # Find the left most line
         xleft = [xminval for xminval in xPositionsLeft if xminval < 700]
         xright = [xminval for xminval in xPositionsLeft if xminval > 700]
@@ -157,14 +174,14 @@ for i in range(len(images)):
             leftMost = int((len(item) / 2) + 0.5) - 1
             if leftMost >= 0:
                 leftMost = xPositionsLeft.index(item[leftMost])
-                rho = lines[leftMost][0][0]
-                theta = lines[leftMost][0][1]
+                rho = params[leftMost][0]
+                theta = params[leftMost][1]
                 a = math.cos(theta)
                 b = math.sin(theta)
-                x1 = int(-511 * b / a + rho / a)
-                x2 = int(-270 * b / a + rho / a)
-                pt1 = (x1, 511)
-                pt2 = (x2, 270)
+                x1 = int(-(height-1) * b / a + rho / a)
+                x2 = int(-midval * b / a + rho / a)
+                pt1 = (x1, height-1)
+                pt2 = (x2, midval)
                 cv2.line(img, pt1, pt2, (0, 0, 255), 3, cv2.LINE_AA)
                 points.append(pt1)
                 points.append(pt2)
@@ -182,3 +199,6 @@ for i in range(len(images)):
         img = cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0)
     cv2.imshow('final', img)
     cv2.waitKey(1)
+#     out.write(img)
+# out.release()
+
