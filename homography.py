@@ -137,6 +137,8 @@ for i in range(len(images)):
     cdst = cv2.cvtColor(sobelx, cv2.COLOR_GRAY2BGR)
     xPositionsLeft = []
     # print('Left lines', len(lines))
+    points = []
+    overlay = img.copy()
     if lines is not None:
         for j in range(0, len(lines)):
             rho = lines[j][0][0]
@@ -146,9 +148,7 @@ for i in range(len(images)):
             x = int(-511*b/a + rho/a)
             # cv2.line(cdst, pt1, pt2, (0, 0, 255), 3, cv2.LINE_AA)
             xPositionsLeft.append(x)
-    if lines is not None:
         # Find the left most line
-        print('Left',xPositionsLeft)
         xleft = [xminval for xminval in xPositionsLeft if xminval < 700]
         xright = [xminval for xminval in xPositionsLeft if xminval > 700]
         # print(len(xleft))
@@ -166,5 +166,19 @@ for i in range(len(images)):
                 pt1 = (x1, 511)
                 pt2 = (x2, 270)
                 cv2.line(img, pt1, pt2, (0, 0, 255), 3, cv2.LINE_AA)
+                points.append(pt1)
+                points.append(pt2)
+    if len(points) == 4:
+        cv2.line(img, points[0], points[2], (0, 0, 255), 3, cv2.LINE_AA)
+        cv2.line(img, points[1], points[3], (0, 0, 255), 3, cv2.LINE_AA)
+        temp = points[2]
+        points[2] = points[3]
+        points[3] = temp
+        cv2.fillPoly(overlay, pts=[np.array(points)], color=(0, 0, 255))
+
+        alpha = 0.4  # Transparency factor.
+
+        # Following line overlays transparent rectangle over the image
+        img = cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0)
     cv2.imshow('final', img)
     cv2.waitKey(1)
