@@ -143,7 +143,13 @@ for i in range(len(images)):
 	R = img[:,:,2]
 	G = img[:,:,1]
 	B = img[:,:,0]
+	RGB = np.zeros_like(R)
 	rbinary = threshIt(R, 170, 240)
+	gbinary = threshIt(G, 200, 255)
+	bbinary = threshIt(B, 200, 255)
+
+	RGB[(rbinary == 1)  & (gbinary == 1) & (bbinary == 1)] = 1
+
 	# cv2.imshow("R", R)
 	# if cv2.waitKey(0) & 0xff == 27:
 	#     cv2.destroyAllWindows()
@@ -153,9 +159,18 @@ for i in range(len(images)):
 	# cv2.imshow("warped2", B)
 	# if cv2.waitKey(0) & 0xff == 27:
 	#     cv2.destroyAllWindows()
-	# cv2.imshow("rbinary", 255*rbinary)
-	# if cv2.waitKey(0) & 0xff == 27:
-	#     cv2.destroyAllWindows()
+	cv2.imshow("rbinary", 255*rbinary)
+	if cv2.waitKey(0) & 0xff == 27:
+	    cv2.destroyAllWindows()
+	cv2.imshow("gbinary", 255*gbinary)
+	if cv2.waitKey(0) & 0xff == 27:
+	    cv2.destroyAllWindows()
+	cv2.imshow("bbinary", 255*bbinary)
+	if cv2.waitKey(0) & 0xff == 27:
+	    cv2.destroyAllWindows()
+	cv2.imshow("RGB", 255*RGB)
+	if cv2.waitKey(0) & 0xff == 27:
+	    cv2.destroyAllWindows()
 
 	# YUV colour
 	yuv = cv2.cvtColor(img, cv2.COLOR_BGR2YUV)
@@ -172,9 +187,9 @@ for i in range(len(images)):
 	# cv2.imshow("V", V)
 	# if cv2.waitKey(0) & 0xff == 27:
 	#     cv2.destroyAllWindows()
-	# cv2.imshow("ubinary", 255*ubinary)
-	# if cv2.waitKey(0) & 0xff == 27:
-	#     cv2.destroyAllWindows()
+	cv2.imshow("ubinary", 255*ubinary)
+	if cv2.waitKey(0) & 0xff == 27:
+	    cv2.destroyAllWindows()
 
 	# combined1 = np.zeros_like(warped)
 	# combined1[(sobel_x == 1)  | (sbinary == 1) | (rbinary == 1)] = 1
@@ -189,7 +204,8 @@ for i in range(len(images)):
 	# combined4[(sobel_x == 1)  | (sbinary == 1) | (rbinary == 1 ) ] = 1
 
 	combined5 = np.zeros_like(warped)
-	combined5[((sobel_x == 1) | (rbinary == 1)) & ( (sbinary ==1) | (ubinary ==1)| (rbinary == 1 ))] = 1
+	combined5[(sobel_x == 1)  & (ubinary ==1)] = 1
+	# combined5[((sobel_x == 1) | (rbinary == 1)) & ( (sbinary ==1) | (ubinary ==1)| (rbinary == 1 ))] = 1
 
 	# cv2.imshow("combined1", 255*combined1)
 	# if cv2.waitKey(0) & 0xff == 27:
