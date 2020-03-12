@@ -48,7 +48,7 @@ def lane_detection(select_data):
         cv2.fillPoly(mask, src1, (255,255,255))
         mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
         mask = binary_thresh(mask, 200, 255)
-        out = cv2.VideoWriter('HistogramOutputData2.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15,
+        out = cv2.VideoWriter('LaneDetectionOutputData2.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15,
                               (images[0].shape[1], images[0].shape[0]))
         #Define Region of interest
         src = np.float32([[280, 700], [1100, 700], [600, 480], [760, 480]])
@@ -78,7 +78,7 @@ def lane_detection(select_data):
         cv2.fillPoly(mask, src1, (255,255,255))
         mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
         mask = binary_thresh(mask, 200, 255)
-        out = cv2.VideoWriter('HistogramOutputData1.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15,
+        out = cv2.VideoWriter('LaneDetectionOutputData1.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15,
                               (images[0].shape[1], images[0].shape[0]))
         #Region of interest
         src = np.float32([[150, 500], [950, 500], [530, 280], [740, 280]])
