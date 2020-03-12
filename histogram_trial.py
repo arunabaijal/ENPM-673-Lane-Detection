@@ -22,7 +22,7 @@ image_dir = os.path.join(current_dir, "data_1/data")
 images = []
 image_names = []
 
-select_data = 0
+select_data = 1
 
 K = np.asarray([[9.037596e+02, 0.000000e+00, 6.957519e+02],
                 [0.000000e+00, 9.019653e+02, 2.242509e+02],
@@ -54,6 +54,8 @@ if select_data == 0:
     cv2.fillPoly(mask, src1, (255,255,255))
     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
     mask = threshIt(mask, 200, 255)
+    out = cv2.VideoWriter('HistogramOutputData2.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15,
+                          (images[0].shape[1], images[0].shape[0]))
 
 else:
     for name in sorted(os.listdir(image_dir)):
@@ -73,6 +75,8 @@ else:
     cv2.fillPoly(mask, src1, (255,255,255))
     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
     mask = threshIt(mask, 200, 255)
+    out = cv2.VideoWriter('HistogramOutputData1.avi', cv2.VideoWriter_fourcc(*'DIVX'), 15,
+                          (images[0].shape[1], images[0].shape[0]))
 
 print(len(images))
 
@@ -132,8 +136,8 @@ for i in range(len(images)):
         combined5[((white == 1) | (yellow == 1)) & (mask == 1)] = 1
     # combined5 = np.float32(combined5 * 255)
 
-    # src = np.float32([[150, 500], [950, 500], [530, 280], [740, 280]])
-    src = np.float32([[280, 700], [1100, 700], [600, 480], [760, 480]])
+    src = np.float32([[150, 500], [950, 500], [530, 280], [740, 280]])
+    # src = np.float32([[280, 700], [1100, 700], [600, 480], [760, 480]])
     dst = np.float32([[0, 400], [200, 400], [0, 0] , [200, 0]])
     Hom = cv2.getPerspectiveTransform(src, dst)
 
@@ -245,7 +249,9 @@ for i in range(len(images)):
     img = cv2.addWeighted(img, 1, newwarp, 0.3, 0)
 
     cv2.imshow("out_img", img)
-    cv2.waitKey(0)
+    cv2.waitKey(1)
+    out.write(img)
+out.release()
 
 # plt.show()
 
