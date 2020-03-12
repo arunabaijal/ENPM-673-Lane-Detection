@@ -12,3 +12,5 @@ Run the following command to run the lane detection code:
 ``` python lane_detector.py <data_selection> ```
 
 Set <data_selection> = 1 for selecting the first data set and <data_selection> = 2 for the second data set. 
+
+Note: The code needs the data-sets to be placed in the current directory.
