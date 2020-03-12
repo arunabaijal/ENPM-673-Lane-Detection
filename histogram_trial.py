@@ -55,6 +55,9 @@ if select_data == 0:
     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
     mask = threshIt(mask, 200, 255)
 
+    src = np.float32([[280, 700], [1100, 700], [600, 480], [760, 480]])
+    dst = np.float32([[0, 400], [200, 400], [0, 0] , [200, 0]])
+
 else:
     for name in sorted(os.listdir(image_dir)):
         # print(name)
@@ -74,10 +77,13 @@ else:
     mask = cv2.cvtColor(mask, cv2.COLOR_BGR2GRAY)
     mask = threshIt(mask, 200, 255)
 
-print(len(images))
+    src = np.float32([[150, 500], [950, 500], [530, 280], [740, 280]])
+    dst = np.float32([[0, 400], [200, 400], [0, 0] , [200, 0]])
+
+#print(len(images))
 
 for i in range(len(images)):
-    print(i)
+    #print(i)
     image = images[i]
     img = deepcopy(image)
 
@@ -100,7 +106,8 @@ for i in range(len(images)):
     yellow = np.zeros_like(img[:,:,0])
     yellow[(hbinary == 1) & (lbinary == 1) & (sbinary == 1)] = 1
 
-    # cv2.imshow("yellow", 255 * yellow)
+    # cv2.imshow("yellow", 255 * yellow) np.float32([[280, 700], [1100, 700], [600, 480], [760, 480]])
+    # dst = np.float32([[0, 400], [200, 400], [0, 0] , [200, 0]])
     # if cv2.waitKey(0) & 0xff == 27:
     #     cv2.destroyAllWindows()
 
@@ -133,8 +140,8 @@ for i in range(len(images)):
     # combined5 = np.float32(combined5 * 255)
 
     # src = np.float32([[150, 500], [950, 500], [530, 280], [740, 280]])
-    src = np.float32([[280, 700], [1100, 700], [600, 480], [760, 480]])
-    dst = np.float32([[0, 400], [200, 400], [0, 0] , [200, 0]])
+    # src = np.float32([[280, 700], [1100, 700], [600, 480], [760, 480]])
+    # dst = np.float32([[0, 400], [200, 400], [0, 0] , [200, 0]])
     Hom = cv2.getPerspectiveTransform(src, dst)
 
     binary_warped = cv2.warpPerspective(combined5, Hom, (200,400))
@@ -143,19 +150,19 @@ for i in range(len(images)):
     
     # binary_warped = cv2.Sobel(combined5, cv2.CV_64F, 1, 0, ksize=5)
     # cv2.waitKey(1)
-    print(binary_warped.shape)
+    #print(binary_warped.shape)
 
     # cv2.waitKey(0)
 
     histogram = np.sum(binary_warped, axis=0)
-    print(histogram.shape)
+    #print(histogram.shape)
     out_img = np.dstack((binary_warped, binary_warped, binary_warped))*255
     midpoint = np.int(histogram.shape[0]/2)
     leftx_base = np.argmax(histogram[:midpoint])
     rightx_base = np.argmax(histogram[midpoint:]) + midpoint
 
-    print("x_base:")
-    print(leftx_base, rightx_base)
+    #print("x_base:")
+    #print(leftx_base, rightx_base)
 
     nwindows = 20
     minpix=50
@@ -225,8 +232,8 @@ for i in range(len(images)):
     right_fitx = right_fit[0]*ploty**2 + right_fit[1]*ploty + right_fit[2]
 
     for k in range(len(ploty)):
-        cv2.circle(out_img, (int(left_fitx[k]), int(ploty[k])), 2, (255, 0, 0), -1)
-        cv2.circle(out_img, (int(right_fitx[k]), int(ploty[k])), 2, (255, 0, 0), -1)
+        cv2.circle(out_img, (int(left_fitx[k]), int(ploty[k])), 5, (255, 0, 0), -1)
+        cv2.circle(out_img, (int(right_fitx[k]), int(ploty[k])), 5, (255, 0, 0), -1)
 
     pts_left = np.array([np.transpose(np.vstack([left_fitx, ploty]))])
     pts_right = np.array([np.flipud(np.transpose(np.vstack([right_fitx, ploty])))])
@@ -244,8 +251,51 @@ for i in range(len(images)):
     # newwarp = cv2.warpPerspective(color_warp, Hinv, (img.shape[1], img.shape[0])) 
     img = cv2.addWeighted(img, 1, newwarp, 0.3, 0)
 
+    
+    # roc_left =  ((1 + (2*left_fit_m[0]*yRange*y_metres + left_fit_m[1])**2)**1.5) / np.absolute(2*left_fit_m[0])
+    # roc_right =  ((1 + (2*right_fit_m[0]*yRange*y_metres + right_fit_m[1])**2)**1.5) / np.absolute(2*right_fit_m[0])
+
+    # leftCurvature = roc_left / 1000
+    # rightCurvature = roc_right/ 1000
+
+    xMax = img.shape[1]
+    yMax = 0
+    vehicleCenter = xMax / 2
+    # print("left fit", left_fit)
+    # print("right fit", right_fit)
+
+    lineLeft = left_fit[0]*yMax**2 + left_fit[1]*yMax + left_fit[2]
+
+    lineRight = right_fit[0]*yMax**2 + right_fit[1]*yMax + right_fit[2]
+    lineMiddle = lineLeft + (lineRight - lineLeft)/2
+
+    pt1 = np.matmul(Hinv, [lineMiddle,yMax,1])
+    pt2= np.matmul(Hinv, [0, binary_warped.shape[0],1])
+    print(" line middle", int(pt1[0]/pt1[2]))
+    print("vehicle centre", int(vehicleCenter))
+    diffFromVehicle = int(pt1[0]/pt1[2]) - int(vehicleCenter)
+
+
+
+    cv2.circle(img, (int(pt1[0]/pt1[2]), int(pt1[1]/pt1[2])), 5, (255, 0, 0), -1)
+    cv2.circle(img, (int(vehicleCenter), int(pt2[1]/pt2[2])), 5, (255, 0, 0), -1)
+
+    if diffFromVehicle >=30:
+        print("Right")
+        cv2.putText(img, 'Right turn', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 2)
+    elif diffFromVehicle <= 21:
+        print("Left")
+        cv2.putText(img, 'Left turn', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 2)
+    else:
+        print("Straight")
+        cv2.putText(img, 'Straight', (50, 50), cv2.FONT_HERSHEY_SIMPLEX, 2, (0, 0, 0), 2)
+
+
+
+
+
     cv2.imshow("out_img", img)
-    cv2.waitKey(0)
+    cv2.waitKey(1)
 
 # plt.show()
 
