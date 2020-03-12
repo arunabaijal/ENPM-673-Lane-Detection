@@ -21,7 +21,7 @@ image_dir = os.path.join(current_dir, "data_1/data")
 images = []
 image_names = []
 
-select_data = 1
+select_data = 0
 
 K = np.asarray([[9.037596e+02, 0.000000e+00, 6.957519e+02],
                 [0.000000e+00, 9.019653e+02, 2.242509e+02],
@@ -237,6 +237,39 @@ for i in range(len(images)):
 
         # Following line overlays transparent rectangle over the image
         img = cv2.addWeighted(overlay, alpha, img, 1 - alpha, 0)
+
+        centre_x1 =  (points[0][0] + points[3][0])/2
+        print("centre x1", centre_x1)
+        centre_x2 = (points[1][0] + points[2][0])/2
+        print("centre x2", centre_x2)
+        centre_pt1 = (centre_x1 , height-1)
+        centre_pt2 = (centre_x2, midval)
+        cv2.line(img, centre_pt1, centre_pt2, (0, 255, 0), 3, cv2.LINE_AA)
+
+        if float(centre_pt2[0] - centre_pt1[0]) ==0:
+        	print("0000000000000000000000000000 Straight")
+
+        else:
+            slope_centre = float(centre_pt2[1] - centre_pt1[1]) /float(centre_pt2[0] - centre_pt1[0])
+            print(slope_centre)
+            if slope_centre <0:
+            	angle = 180 - math.degrees(math.atan(abs(slope_centre)))
+            else:
+            	angle = math.degrees(math.atan(slope_centre))
+            print("angle", angle)
+            if 82<angle <99 :
+                print("xxxxxxxxxxxxxxxxxxxxxxxxxx Straight")
+            elif angle < 82:
+                print("xxxxxxxxxxxxxxxxxxxxxxxxxxx Left")
+
+            elif angle > 99:
+                print("xxxxxxxxxxxxxxxxxxxxxxxxxxxx right")
+            else:
+                print("yyyyyyyyyyyyyyyyyyyyyyyyyyyy Straight")
+
+
+
+
     cv2.imshow('final', img)
     cv2.waitKey(1)
     out.write(img)
